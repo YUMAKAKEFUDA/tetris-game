@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 現在のピースの描画
-        if (currentPiece) {
+        if (currentPiece && !isFlashing) {
             currentPiece.matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value) {
@@ -414,6 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ピースを移動する関数
     function movePiece(dir) {
+        if (isFlashing) return; // フラッシュ中は移動できない
+        
         currentPiece.pos.x += dir;
         if (checkCollision(currentPiece, currentPiece.pos)) {
             currentPiece.pos.x -= dir;
@@ -424,6 +426,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ピースを回転する関数
     function rotatePiece() {
+        if (isFlashing) return; // フラッシュ中は回転できない
+        
         const rotated = [];
         for (let i = 0; i < currentPiece.matrix[0].length; i++) {
             rotated.push([]);
@@ -445,6 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ピースを下に移動する関数
     function dropPiece() {
+        if (isFlashing) return; // フラッシュ中は移動できない
+        
         currentPiece.pos.y++;
         if (checkCollision(currentPiece, currentPiece.pos)) {
             currentPiece.pos.y--;
@@ -472,6 +478,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ピースをすぐに下まで落とす関数（ハードドロップ）
     function hardDrop() {
+        if (isFlashing) return; // フラッシュ中はハードドロップできない
+        
         while (!checkCollision(currentPiece, { x: currentPiece.pos.x, y: currentPiece.pos.y + 1 })) {
             currentPiece.pos.y++;
         }
@@ -500,10 +508,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ピースをボードに固定する関数
     function mergePiece() {
+        if (!currentPiece) return; // currentPieceがnullの場合は何もしない
+        
         currentPiece.matrix.forEach((row, y) => {
             row.forEach((value, x) => {
                 if (value) {
-                    gameBoard[y + currentPiece.pos.y][x + currentPiece.pos.x] = value;
+                    // ボード範囲内かチェック
+                    const boardY = y + currentPiece.pos.y;
+                    const boardX = x + currentPiece.pos.x;
+                    
+                    if (boardY >= 0 && boardY < gridHeight && boardX >= 0 && boardX < gridWidth) {
+                        gameBoard[boardY][boardX] = value;
+                    }
                 }
             });
         });
@@ -540,10 +556,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            // 行の削除と新しい行の追加
+            // 行の削除と新しい行の追加（下から上に向かって処理）
+            // clearedLinesを降順にソート
+            clearedLines.sort((a, b) => b - a);
+            
             clearedLines.forEach(y => {
-                const row = gameBoard.splice(y, 1)[0].fill(0);
-                gameBoard.unshift(row);
+                // 行を削除
+                gameBoard.splice(y, 1);
+                // 上に新しい行を追加
+                gameBoard.unshift(Array(gridWidth).fill(0));
             });
             
             // スコア計算（1行:100点、2行:300点、3行:500点、4行:800点）
@@ -621,6 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lines = 0;
         dropInterval = 1000;
         gameOver = false;
+        isFlashing = false;
         particles = [];
 
         scoreElement.textContent = score;
@@ -662,6 +684,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' || e.key === ' ') {
                 startGame();
                 return;
+            }
+        }
+        
+        // フラッシュ中またはポーズ中は特定のキー以外を無視
+        if (isFlashing) {
+            if (e.key === 'p' || e.key === 'P' || e.key === 'm' || e.key === 'M') {
+                // ポーズとミュート操作のみ許可
+            } else {
+                return; // その他のキーは無視
             }
         }
         
