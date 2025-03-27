@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>テトリス</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -26,13 +27,17 @@
                 <p>↓ : ソフトドロップ</p>
                 <p>スペース : ハードドロップ</p>
                 <p>P : 一時停止</p>
+                <p>M : ミュート</p>
             </div>
-            <button id="start-button">スタート</button>
+            <button id="start-button" class="glow">スタート</button>
             <button id="pause-button">一時停止</button>
         </div>
         <div class="game-board-container">
             <canvas id="game-board" width="300" height="600"></canvas>
         </div>
+    </div>
+    <div class="footer">
+        Created by YUMAKAKEFUDA - 2025
     </div>
     <script src="tetris.js"></script>
 </body>
